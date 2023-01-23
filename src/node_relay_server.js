@@ -140,8 +140,15 @@ class NodeRelayServer {
       this.dynamicSessions.delete(id);
     });
     this.dynamicSessions.set(id, session);
+    // TODO: only for one lobby
+    const oldSession = context.relays.get(app)
+    if(oldSession) {
+      Logger.log('[relay remove prev session] start id=' + id, 'session id', app);
+      oldSession.end()
+    }
     session.run();
     Logger.log('[relay dynamic push] start id=' + id, conf.inPath, 'to', conf.ouPath);
+    context.relays.set(app, session)
     context.nodeEvent.emit("relayPushDone", id);
   }
 

@@ -139,8 +139,9 @@ async function pushStream(req, res, next) {
   let url = req.body.url;
   let app = req.body.app;
   let name = req.body.name;
-  if (url && app && name) {
-    process.nextTick(() => this.nodeEvent.emit('relayPush', url, app, name));
+  // if (url && app && name) {
+  if (url && app) {
+    process.nextTick(() => this.nodeEvent.emit('relayPush', url, app, name ? name : ''));
     let ret = await once(this.nodeEvent, 'relayPushDone');
     res.send(ret[0]);
   } else {
