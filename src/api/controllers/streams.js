@@ -1,5 +1,7 @@
 const _ = require('lodash');
 const NodeTransServer = require('../../node_trans_server');
+// const Logger = require("../../node_core_logger");
+const {spawn} = require("child_process");
 
 function postStreamTrans(req, res, next) {
   let config = req.body;
@@ -24,6 +26,47 @@ function postStreamTrans(req, res, next) {
     res.status(404);
     res.json({ message: 'Failed creating stream' });
   }
+}
+
+function concatStreams(req, res, next) {
+  const body = req.body;
+  const {firstStream, secondStream} = body;
+  const app = 'newUuid'
+  const newStreamUrl = 'rtmp://localhost/' + app
+  let format = 'flv';
+  const filterComplex = '"[1:v]scale=200:200,pad=200:200:(ow-iw)/2:(oh-ih)/2[small];[0:v][small]overlay=10:10[outv];[0:a]' +
+      'volume=1[a1];[1:a]volume=0.5[a2]; [a1][a2]amix=inputs=2[aout]"'
+  let argv = ['-i', firstStream, '-i', secondStream, '-filter_complex', filterComplex, '-map', '"[outv]"', '-map',
+      '"[aout]"', '-f', format, '-c:v', 'libx264', '-preset', 'ultrafast', '-tune', 'zerolatency', '-b:v', '2000k', newStreamUrl];
+  // const ffmpegString = 'ffmpeg -i ' + 'sdf' + ' -i ' + 'df' +
+  //     ' -filter_complex "[1:v]scale=200:200,pad=200:200:(ow-iw)/2:(oh-ih)/2[small];[0:v][small]overlay=10:10[outv];[0:a]' +
+  //     'volume=10[a1];[1:a]volume=0.5[a2]; [a1][a2]amix=inputs=2[aout]" -map "[outv]" -map "[aout]" -f flv -c:v libx264' +
+  //     ' -preset ultrafast -tune zerolatency -b:v 2000k ' + newStreamUrl;
+
+  console.log('[CONCAT stream task] ', 'cmd=ffmpeg', argv.join(' '));
+
+  const ffmpeg_exec = spawn('ffmpeg', argv);
+  ffmpeg_exec.on('error', (e) => {
+    console.log(e);
+  });
+
+  ffmpeg_exec.stdout.on('data', (data) => {
+    console.log(`FF_LOG:${data}`);
+  });
+
+  ffmpeg_exec.stderr.on('data', (data) => {
+    console.log(`FF_LOG:${data}`);
+  });
+
+  ffmpeg_exec.on('close', (code) => {
+    console.log('[CONCAT end] ', 'code=' + code);
+    // this.emit('end', this.id);
+  });
+
+  res.status(201)
+  res.json({
+    app: app,
+  })
 }
 
 function getStreams(req, res, next) {
@@ -164,3 +207,4 @@ exports.delStream = delStream;
 exports.getStreams = getStreams;
 exports.getStream = getStream;
 exports.postStreamTrans = postStreamTrans;
+exports.concatStreams = concatStreams;

@@ -7,5 +7,6 @@ module.exports = (context) => {
   router.get('/', streamController.getStreams.bind(context));
   router.get('/:app/:stream', streamController.getStream.bind(context));
   router.delete('/:app/:stream', streamController.delStream.bind(context));
+  router.post('/concat', streamController.concatStreams.bind(context));
   return router;
 };
