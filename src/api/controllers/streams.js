@@ -31,12 +31,14 @@ function postStreamTrans(req, res, next) {
 function concatStreams(req, res, next) {
   const body = req.body;
   const {firstStream, secondStream} = body;
-  const app = 'newUuid'
-  const newStreamUrl = 'rtmp://localhost/' + app
+  const firstStreamUrl = 'rtmp://207.154.245.9:1986/' + firstStream
+  const secondStreamUrl = 'rtmp://207.154.245.9:1986/' + secondStream
+  const app = '84c4336e-7c38-4399-b975-731e10ef4a1b'
+  const newStreamUrl = 'rtmp://207.154.245.9:1986/' + app
   let format = 'flv';
   const filterComplex = '"[1:v]scale=200:200,pad=200:200:(ow-iw)/2:(oh-ih)/2[small];[0:v][small]overlay=10:10[outv];[0:a]' +
       'volume=1[a1];[1:a]volume=0.5[a2]; [a1][a2]amix=inputs=2[aout]"'
-  let argv = ['-i', firstStream, '-i', secondStream, '-filter_complex', filterComplex, '-map', '"[outv]"', '-map',
+  let argv = ['-i', firstStreamUrl, '-i', secondStreamUrl, '-filter_complex', filterComplex, '-map', '"[outv]"', '-map',
       '"[aout]"', '-f', format, '-c:v', 'libx264', '-preset', 'ultrafast', '-tune', 'zerolatency', '-b:v', '2000k', newStreamUrl];
   // const ffmpegString = 'ffmpeg -i ' + 'sdf' + ' -i ' + 'df' +
   //     ' -filter_complex "[1:v]scale=200:200,pad=200:200:(ow-iw)/2:(oh-ih)/2[small];[0:v][small]overlay=10:10[outv];[0:a]' +
